@@ -1,0 +1,14 @@
+==============================================
+  MINI-SO — LOG DE ESTADO FINAL
+  Tempo total de simulação: 22 s
+==============================================
+
+--- Processos ---
+PID   Burst Total  Prioridade  Tam(bytes) Estado    
+1     10           2           200        Encerrado 
+2     4            1           100        Encerrado 
+3     6            3           512        Encerrado 
+4     2            2           128        Encerrado 
+
+--- Mapa Final da RAM ---
+[Livre: 1024B]
