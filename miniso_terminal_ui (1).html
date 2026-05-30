@@ -1,0 +1,236 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#4ade80;--green-d:#16a34a;--amber:#fbbf24;--red:#f87171;--blue:#60a5fa;
+  --cyan:#22d3ee;--gray:#9ca3af;--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;
+  --border:#30363d;--text:#e6edf3;--dim:#8b949e;
+  --font:'JetBrains Mono',monospace;
+}
+body{background:transparent;padding:0;font-family:var(--font)}
+.terminal{background:var(--bg);border-radius:12px;overflow:hidden;border:1px solid var(--border);max-width:720px;margin:0 auto}
+.titlebar{background:var(--bg2);padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.dot{width:12px;height:12px;border-radius:50%}
+.dot-r{background:#ff5f56}.dot-y{background:#ffbd2e}.dot-g{background:#27c93f}
+.title-text{color:var(--dim);font-size:12px;margin-left:auto;margin-right:auto;letter-spacing:.5px}
+.screen{padding:20px;font-size:12.5px;line-height:1.65;color:var(--text)}
+.header{color:var(--cyan);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:16px;background:var(--bg2)}
+.header-title{color:var(--green);font-weight:700;font-size:14px;margin-bottom:4px}
+.header-sub{color:var(--dim);font-size:11px}
+.sep{border:none;border-top:1px solid var(--border);margin:12px 0}
+.block{border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:12px;background:var(--bg2)}
+.block-time{color:var(--amber);font-weight:700;margin-bottom:8px;font-size:13px}
+.row{display:flex;gap:6px;align-items:baseline;margin-bottom:5px;flex-wrap:wrap}
+.label{color:var(--dim);min-width:90px;font-size:11px}
+.cpu-run{color:var(--green);font-weight:700}
+.cpu-idle{color:var(--dim);font-style:italic}
+.pid-tag{display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 7px;color:var(--blue);font-size:11px;margin-right:4px}
+.pid-tag.active{background:#1d3a5e;border-color:var(--blue)}
+.arr{color:var(--dim);margin:0 2px}
+.empty{color:var(--dim);font-style:italic;font-size:11px}
+.ram-bar{display:flex;flex-wrap:wrap;gap:2px;margin-top:6px}
+.ram-seg{height:20px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;min-width:28px;padding:0 4px;white-space:nowrap}
+.seg-p1{background:#1d3a5e;color:var(--blue)}
+.seg-p2{background:#1a3a1a;color:var(--green)}
+.seg-p3{background:#3a2a10;color:var(--amber)}
+.seg-p4{background:#3a1a2a;color:#f472b6}
+.seg-free{background:var(--bg3);color:var(--dim);border:1px solid var(--border)}
+.event{padding:7px 12px;border-radius:5px;margin-bottom:8px;font-size:11.5px;display:flex;align-items:center;gap:8px}
+.event-enc{background:#0d2a1a;border-left:3px solid var(--green);color:var(--green)}
+.event-pre{background:#1a1a0d;border-left:3px solid var(--amber);color:var(--amber)}
+.event-dead{background:#2a0d0d;border-left:3px solid var(--red);color:var(--red)}
+.icon{font-size:14px}
+.summary{border:1px solid var(--green-d);border-radius:6px;padding:12px 14px;background:#0d1f0d;margin-top:12px}
+.summary-title{color:var(--green);font-weight:700;margin-bottom:10px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{color:var(--dim);text-align:left;padding:3px 8px;border-bottom:1px solid var(--border);font-weight:400}
+td{color:var(--text);padding:4px 8px}
+tr:hover td{background:var(--bg3)}
+.enc-badge{color:var(--green);font-size:11px}
+.log-note{color:var(--dim);font-size:11px;margin-top:10px}
+.log-file{color:var(--cyan)}
+.prompt{display:flex;align-items:center;gap:6px;margin-top:14px;padding-top:10px;border-top:1px solid var(--border)}
+.prompt-user{color:var(--green)}.prompt-path{color:var(--blue)}.prompt-sym{color:var(--dim)}
+.cursor{display:inline-block;width:8px;height:14px;background:var(--green);animation:blink 1s step-end infinite;vertical-align:middle;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* controls */
+.controls{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg2);flex-wrap:wrap}
+.btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:5px 12px;border-radius:5px;cursor:pointer;transition:border-color .15s}
+.btn:hover{border-color:var(--green);color:var(--green)}
+.btn.active{border-color:var(--green);color:var(--green);background:#0d1f0d}
+.step-info{color:var(--dim);font-size:11px;margin-left:auto;align-self:center}
+</style>
+
+<div class="terminal">
+  <div class="titlebar">
+    <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+    <span class="title-text">mini-so — simulador de processos</span>
+  </div>
+  <div class="screen" id="screen"></div>
+  <div class="controls">
+    <button class="btn" onclick="prev()">&#8592; Anterior</button>
+    <button class="btn" onclick="next()">Próximo &#8594;</button>
+    <button class="btn" onclick="play()" id="playbtn">&#9654; Auto</button>
+    <button class="btn" onclick="goTo(0)">&#8676; Início</button>
+    <button class="btn" onclick="goTo(states.length-1)">Fim &#8677;</button>
+    <span class="step-info" id="step-info"></span>
+  </div>
+</div>
+
+<script>
+const COLORS = {1:'seg-p1',2:'seg-p2',3:'seg-p3',4:'seg-p4'};
+const RAM=1024;
+
+const states=[
+  {t:0,cpu:{pid:1,rem:10},prontos:[2,3,4],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[]},
+  {t:1,cpu:{pid:1,rem:9},prontos:[2,3,4],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[]},
+  {t:2,cpu:{pid:2,rem:4},prontos:[3,4,1],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[{type:'pre',msg:'PID 1 → preempção. Restam 8s.'}]},
+  {t:3,cpu:{pid:2,rem:3},prontos:[3,4,1],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[]},
+  {t:4,cpu:{pid:3,rem:6},prontos:[4,1,2],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[{type:'pre',msg:'PID 2 → preempção. Restam 2s.'}]},
+  {t:5,cpu:{pid:3,rem:5},prontos:[4,1,2],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[]},
+  {t:6,cpu:{pid:4,rem:2},prontos:[1,2,3],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[{type:'pre',msg:'PID 3 → preempção. Restam 4s.'}]},
+  {t:7,cpu:{pid:4,rem:1},prontos:[1,2,3],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:4,b:128},{pid:0,b:84}],
+   events:[]},
+  {t:8,cpu:{pid:1,rem:8},prontos:[2,3],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:0,b:212}],
+   events:[{type:'enc',msg:'PID 4 encerrado no tempo 8. RAM liberada (128B).'}]},
+  {t:10,cpu:{pid:2,rem:2},prontos:[3,1],espera:[],
+   ram:[{pid:1,b:200},{pid:2,b:100},{pid:3,b:512},{pid:0,b:212}],
+   events:[{type:'pre',msg:'PID 1 → preempção. Restam 6s.'}]},
+  {t:12,cpu:{pid:3,rem:4},prontos:[1],espera:[],
+   ram:[{pid:1,b:200},{pid:0,b:100},{pid:3,b:512},{pid:0,b:212}],
+   events:[{type:'enc',msg:'PID 2 encerrado no tempo 12. RAM liberada (100B).'}]},
+  {t:14,cpu:{pid:1,rem:6},prontos:[3],espera:[],
+   ram:[{pid:1,b:200},{pid:0,b:100},{pid:3,b:512},{pid:0,b:212}],
+   events:[{type:'pre',msg:'PID 3 → preempção. Restam 2s.'}]},
+  {t:18,cpu:{pid:1,rem:4},prontos:[],espera:[],
+   ram:[{pid:1,b:200},{pid:0,b:824}],
+   events:[{type:'enc',msg:'PID 3 encerrado no tempo 18. RAM liberada (512B).'}]},
+  {t:22,cpu:null,prontos:[],espera:[],
+   ram:[{pid:0,b:1024}],
+   events:[{type:'enc',msg:'PID 1 encerrado no tempo 22. Simulação concluída.'}],
+   done:true}
+];
+
+let cur=0,timer=null;
+
+function ramBar(segs){
+  let h='<div class="ram-bar">';
+  const total=segs.reduce((a,s)=>a+s.b,0);
+  segs.forEach(s=>{
+    const pct=Math.max(4,(s.b/total)*100);
+    const cls=s.pid?COLORS[s.pid]:'seg-free';
+    const lbl=s.pid?`P${s.pid}: ${s.b}B`:`Livre: ${s.b}B`;
+    h+=`<div class="ram-seg ${cls}" style="width:${pct}%" title="${lbl}">${lbl}</div>`;
+  });
+  return h+'</div>';
+}
+
+function pidTag(p,active){return`<span class="pid-tag${active?' active':''}">${active?'&#9654; ':''}PID ${p}</span>`}
+
+function render(s){
+  let h='';
+  // header
+  h+=`<div class="header">
+    <div class="header-title">Mini-SO &mdash; Simulador de Gerência de Processos e Memória</div>
+    <div class="header-sub">Quantum: 2s &nbsp;|&nbsp; RAM: 1024B &nbsp;|&nbsp; Algoritmo: Round-Robin &nbsp;|&nbsp; Alocação: First-Fit</div>
+  </div>`;
+
+  // events
+  if(s.events.length){
+    s.events.forEach(e=>{
+      const cls=e.type==='enc'?'event-enc':e.type==='pre'?'event-pre':'event-dead';
+      const icon=e.type==='enc'?'✓':e.type==='pre'?'↻':'⚠';
+      h+=`<div class="event ${cls}"><span class="icon">${icon}</span>${e.msg}</div>`;
+    });
+  }
+
+  // status block
+  h+=`<div class="block">
+    <div class="block-time">Tempo Atual: ${String(s.t).padStart(2,'0')} s</div>`;
+
+  // CPU
+  h+=`<div class="row"><span class="label">CPU:</span>`;
+  if(s.cpu){
+    h+=`<span class="cpu-run">${pidTag(s.cpu.pid,true)} executando &mdash; restam <strong>${s.cpu.rem}s</strong></span>`;
+  } else {
+    h+=`<span class="cpu-idle">ociosa</span>`;
+  }
+  h+='</div>';
+
+  // ready queue
+  h+=`<div class="row"><span class="label">Prontos:</span>`;
+  if(s.prontos.length){
+    s.prontos.forEach((p,i)=>{h+=(i?'<span class="arr">→</span>':'')+pidTag(p,false)});
+  } else {h+='<span class="empty">[vazia]</span>'}
+  h+='</div>';
+
+  // wait queue
+  h+=`<div class="row"><span class="label">Espera:</span>`;
+  if(s.espera.length){
+    s.espera.forEach((p,i)=>{h+=(i?'<span class="arr">→</span>':'')+pidTag(p,false)});
+  } else {h+='<span class="empty">[vazia]</span>'}
+  h+='</div>';
+
+  // RAM
+  h+=`<div class="row" style="margin-top:8px"><span class="label">RAM:</span></div>`;
+  h+=ramBar(s.ram);
+  h+='</div>';
+
+  // summary if done
+  if(s.done){
+    h+=`<div class="summary">
+      <div class="summary-title">&#10003; Simulação concluída &mdash; Tempo total: 22s</div>
+      <table>
+        <tr><th>PID</th><th>Burst</th><th>Prioridade</th><th>RAM</th><th>Estado</th></tr>
+        <tr><td>1</td><td>10s</td><td>2</td><td>200B</td><td class="enc-badge">&#10003; Encerrado</td></tr>
+        <tr><td>2</td><td>4s</td><td>1</td><td>100B</td><td class="enc-badge">&#10003; Encerrado</td></tr>
+        <tr><td>3</td><td>6s</td><td>3</td><td>512B</td><td class="enc-badge">&#10003; Encerrado</td></tr>
+        <tr><td>4</td><td>2s</td><td>2</td><td>128B</td><td class="enc-badge">&#10003; Encerrado</td></tr>
+      </table>
+      <div class="log-note">Log salvo em <span class="log-file">log_memoria.txt</span></div>
+    </div>`;
+  }
+
+  // prompt line
+  h+=`<div class="prompt">
+    <span class="prompt-user">rodrigo</span><span class="prompt-sym">@</span><span class="prompt-path">mini-so</span>
+    <span class="prompt-sym">:~$</span>
+    <span class="prompt-sym">./miniso processos.txt</span>
+    <span class="cursor"></span>
+  </div>`;
+
+  document.getElementById('screen').innerHTML=h;
+  document.getElementById('step-info').textContent=`Passo ${cur+1} / ${states.length}`;
+}
+
+function next(){if(cur<states.length-1){cur++;render(states[cur])}}
+function prev(){if(cur>0){cur--;render(states[cur])}}
+function goTo(i){cur=i;render(states[cur])}
+function play(){
+  if(timer){clearInterval(timer);timer=null;document.getElementById('playbtn').textContent='▶ Auto';return}
+  document.getElementById('playbtn').textContent='⏸ Pausar';
+  timer=setInterval(()=>{
+    if(cur>=states.length-1){clearInterval(timer);timer=null;document.getElementById('playbtn').textContent='▶ Auto';return}
+    cur++;render(states[cur]);
+  },1400);
+}
+
+render(states[0]);
+</script>
